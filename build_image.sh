@@ -79,8 +79,8 @@ cd build-ctx || exit 1
 LVAR_GITHUB_BASE="https://raw.githubusercontent.com/tsitle/docker_images_common_files/master"
 
 LVAR_DEBIAN_DIST="$(_getCpuArch debian_dist)"
-LVAR_DEBIAN_RELEASE="stretch"
-LVAR_DEBIAN_VERSION="9.11"
+LVAR_UBUNTU_RELEASE="bionic"
+LVAR_UBUNTU_VERSION="18.04"
 
 LVAR_MYSQL_VERSION="5.7"
 
@@ -91,8 +91,8 @@ echo
 
 docker build \
 		--build-arg CF_CPUARCH_DEB_DIST="$LVAR_DEBIAN_DIST" \
-		--build-arg CF_DEBIAN_RELEASE="$LVAR_DEBIAN_RELEASE" \
-		--build-arg CF_DEBIAN_VERSION="$LVAR_DEBIAN_VERSION" \
+		--build-arg CF_UBUNTU_RELEASE="$LVAR_UBUNTU_RELEASE" \
+		--build-arg CF_UBUNTU_VERSION="$LVAR_UBUNTU_VERSION" \
 		--build-arg CF_MYSQL_VERSION="$LVAR_MYSQL_VERSION" \
 		-t "$LVAR_IMAGE_NAME":"$LVAR_IMAGE_VER" \
 		.

@@ -156,11 +156,23 @@ _dep_setOwnerAndPerms_recursive "/root/extDbFiles" $CF_SYSUSR_MYSQL_USER_ID $CF_
 if [ -n "$CF_MYSQL_MAX_ALLOWED_PACKET" ]; then
 	echo "$VAR_MYNAME: Setting MYSQL_MAX_ALLOWED_PACKET=$CF_MYSQL_MAX_ALLOWED_PACKET"
 	echo "max_allowed_packet = $CF_MYSQL_MAX_ALLOWED_PACKET" >> /etc/mysql/conf.d/docker.cnf
+	sed \
+			-e "s/^max_allowed_packet\t= .*$/max_allowed_packet   = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
+			-i'' /etc/mysql/conf.d/mysqldump.cnf
+	sed \
+			-e "s/^max_allowed_packet\t= .*$/max_allowed_packet   = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
+			-i'' /etc/mysql/mysql.conf.d/mysqld.cnf
+fi
+if [ -n "$CF_MYSQL_INNODB_BUFFER_POOL_SIZE" ]; then
+	echo "$VAR_MYNAME: Setting MYSQL_INNODB_BUFFER_POOL_SIZE=$CF_MYSQL_INNODB_BUFFER_POOL_SIZE"
+	sed \
+			-e "s/^innodb_buffer_pool_size = .*$/innodb_buffer_pool_size = $CF_MYSQL_INNODB_BUFFER_POOL_SIZE/g" \
+			-i'' /etc/mysql/conf.d/custom-innodb.cnf
 fi
 if [ -n "$CF_MYSQL_INNODB_LOG_FILE_SIZE" ]; then
 	echo "$VAR_MYNAME: Setting MYSQL_INNODB_LOG_FILE_SIZE=$CF_MYSQL_INNODB_LOG_FILE_SIZE"
 	sed \
-			-e "s/^innodb_log_file_size\t= .*$/innodb_log_file_size   = $CF_MYSQL_INNODB_LOG_FILE_SIZE/g" \
+			-e "s/^innodb_log_file_size = .*$/innodb_log_file_size = $CF_MYSQL_INNODB_LOG_FILE_SIZE/g" \
 			-i'' /etc/mysql/conf.d/custom-innodb.cnf
 	rm /var/lib/mysql/ib_log* 2>/dev/null
 fi
