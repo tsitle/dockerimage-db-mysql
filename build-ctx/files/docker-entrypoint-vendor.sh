@@ -263,17 +263,50 @@ docker_setup_db() {
 
 	# Creates a custom database and user if specified
 	if [ -n "$MYSQL_DATABASE" ]; then
-		mysql_note "Creating database ${MYSQL_DATABASE}"
+		if [ "$CF_ENABLE_DB_INIT_DEBUG" = "true" ]; then
+			echo
+			echo
+			echo "Creating database '${MYSQL_DATABASE}'"
+			echo "----------------------------------"
+		fi
+		#mysql_note "Creating database ${MYSQL_DATABASE}"
 		docker_process_sql --database=mysql <<<"CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;"
+		if [ "$CF_ENABLE_DB_INIT_DEBUG" = "true" ]; then
+			echo "----------------------------------"
+			echo
+			echo
+		fi
 	fi
 
 	if [ -n "$MYSQL_USER" ] && [ -n "$MYSQL_PASSWORD" ]; then
-		mysql_note "Creating user ${MYSQL_USER}"
+		if [ "$CF_ENABLE_DB_INIT_DEBUG" = "true" ]; then
+			echo
+			echo
+			echo "Creating user '${MYSQL_USER}'"
+			echo "----------------------------------"
+		fi
+		#mysql_note "Creating user ${MYSQL_USER}"
 		docker_process_sql --database=mysql <<<"CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;"
+		if [ "$CF_ENABLE_DB_INIT_DEBUG" = "true" ]; then
+			echo "----------------------------------"
+			echo
+			echo
+		fi
 
 		if [ -n "$MYSQL_DATABASE" ]; then
-			mysql_note "Giving user ${MYSQL_USER} access to schema ${MYSQL_DATABASE}"
+			if [ "$CF_ENABLE_DB_INIT_DEBUG" = "true" ]; then
+				echo
+				echo
+				echo "Giving user '${MYSQL_USER}' access to schema '${MYSQL_DATABASE}'"
+				echo "----------------------------------"
+			fi
+			#mysql_note "Giving user ${MYSQL_USER} access to schema ${MYSQL_DATABASE}"
 			docker_process_sql --database=mysql <<<"GRANT ALL ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%' ;"
+			if [ "$CF_ENABLE_DB_INIT_DEBUG" = "true" ]; then
+				echo "----------------------------------"
+				echo
+				echo
+			fi
 		fi
 
 		docker_process_sql --database=mysql <<<"FLUSH PRIVILEGES ;"
