@@ -1,0 +1,141 @@
+#
+# The MySQL  Client configuration file.
+#
+# For explanations see
+# https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html
+
+[mysqld]
+
+# innodb_buffer_pool_size:
+#   A larger buffer pool requires less disk I/O to access the same table data more than once.
+#   On a dedicated database server, you might set the buffer pool size to 80% of the machine's
+#   physical memory size. Be aware of the following potential issues when configuring buffer pool size,
+#   and be prepared to scale back the size of the buffer pool if necessary.
+#
+#   Competition for physical memory can cause paging in the operating system.
+#
+#   InnoDB reserves additional memory for buffers and control structures, so that the
+#   total allocated space is approximately 10% greater than the specified buffer pool size.
+#
+#   Address space for the buffer pool must be contiguous, which can be an issue on
+#   Windows systems with DLLs that load at specific addresses.
+#
+#   The time to initialize the buffer pool is roughly proportional to its size.
+#   On instances with large buffer pools, initialization time might be significant.
+#   To reduce the initialization period, you can save the buffer pool state at
+#   server shutdown and restore it at server startup.
+#     See Section 14.8.3.7, “Saving and Restoring the Buffer Pool State”. 
+#
+#   When you increase or decrease buffer pool size, the operation is performed in chunks.
+#   Chunk size is defined by the innodb_buffer_pool_chunk_size configuration option,
+#   which has a default of 128 MB.
+#
+#   Buffer pool size must always be equal to or a multiple of
+#     innodb_buffer_pool_chunk_size * innodb_buffer_pool_instances
+#   If you alter the buffer pool size to a value that is not equal to or a multiple of
+#     innodb_buffer_pool_chunk_size * innodb_buffer_pool_instances
+#   buffer pool size is automatically adjusted to a value that is equal to or a multiple of
+#     innodb_buffer_pool_chunk_size * innodb_buffer_pool_instances
+
+# (default is 128MB -- adjust value here, 50%-75% of total RAM)
+innodb_buffer_pool_size = 8G
+
+# innodb_log_file_size:
+#   The size in bytes of each log file in a log group.
+#   The combined size of log files (innodb_log_file_size * innodb_log_files_in_group) cannot exceed a
+#   maximum value that is slightly less than 512GB. A pair of 255 GB log files, for example,
+#   approaches the limit but does not exceed it. The default value is 48MB.
+#
+#   Generally, the combined size of the log files should be large enough that the server can
+#   smooth out peaks and troughs in workload activity, which often means that there is enough
+#   redo log space to handle more than an hour of write activity. The larger the value,
+#   the less checkpoint flush activity is required in the buffer pool, saving disk I/O.
+#   Larger log files also make crash recovery slower, although improvements to
+#   recovery performance make log file size less of a consideration than it was in earlier versions of MySQL. 
+
+# (default is 48MB)
+innodb_log_file_size = 256M
+
+# innodb_log_buffer_size:
+#   The size in bytes of the buffer that InnoDB uses to write to the log files on disk.
+#   The default value changed from 8MB to 16MB with the introduction of 32KB and 64KB innodb_page_size values.
+#   A large log buffer enables large transactions to run without the need to write the log to disk before
+#   the transactions commit. Thus, if you have transactions that update, insert, or delete many rows,
+#   making the log buffer larger saves disk I/O.
+#
+#   For related information, see Memory Configuration, and Section 8.5.4, “Optimizing InnoDB Redo Logging”.
+#   For general I/O tuning advice, see Section 8.5.8, “Optimizing InnoDB Disk I/O”. 
+
+# (default is 16MB)
+innodb_log_buffer_size = 256M
+
+# innodb_flush_log_at_trx_commit:
+#    Controls the balance between strict ACID compliance for commit operations and higher performance
+#    that is possible when commit-related I/O operations are rearranged and done in batches.
+#    You can achieve better performance by changing the default value but then you can lose transactions in
+#    a crash.
+#
+#    - The default setting of 1 is required for full ACID compliance.
+#      Logs are written and flushed to disk at each transaction commit.
+#
+#    - With a setting of 0, logs are written and flushed to disk once per second.
+#      Transactions for which logs have not been flushed can be lost in a crash.
+#
+#    - With a setting of 2, logs are written after each transaction commit and flushed to disk once per second.
+#      Transactions for which logs have not been flushed can be lost in a crash.
+#
+#    - For settings 0 and 2, once-per-second flushing is not 100% guaranteed.
+#      Flushing may occur more frequently due to DDL changes and other internal InnoDB activities
+#      that cause logs to be flushed independently of the innodb_flush_log_at_trx_commit setting,
+#      and sometimes less frequently due to scheduling issues. If logs are flushed once per second,
+#      up to one second of transactions can be lost in a crash. If logs are flushed more or less
+#      frequently than once per second, the amount of transactions that can be lost varies accordingly.
+#
+#    - Log flushing frequency is controlled by innodb_flush_log_at_timeout, which allows you to set
+#      log flushing frequency to N seconds (where N is 1 ... 2700, with a default value of 1).
+#      However, any mysqld process crash can erase up to N seconds of transactions.
+#
+#    - DDL changes and other internal InnoDB activities flush the log independently of the
+#      innodb_flush_log_at_trx_commit setting.
+#
+#    - InnoDB crash recovery works regardless of the innodb_flush_log_at_trx_commit setting.
+#      Transactions are either applied entirely or erased entirely. 
+#
+#    For durability and consistency in a replication setup that uses InnoDB with transactions:
+#    - If binary logging is enabled, set sync_binlog=1
+#    - Always set innodb_flush_log_at_trx_commit=1
+
+# (default is 1)
+innodb_flush_log_at_trx_commit = 0
+
+# sync_binlog:
+#    Controls how often the MySQL server synchronizes the binary log to disk.
+#
+#    - sync_binlog=0: Disables synchronization of the binary log to disk by the MySQL server.
+#      Instead, the MySQL server relies on the operating system to flush the binary log to disk
+#      from time to time as it does for any other file. This setting provides the best performance,
+#      but in the event of a power failure or operating system crash,
+#      it is possible that the server has committed transactions that have not been synchronized
+#      to the binary log.
+#
+#    - sync_binlog=1: Enables synchronization of the binary log to disk before
+#      transactions are committed. This is the safest setting but can have a negative impact
+#      on performance due to the increased number of disk writes.
+#      In the event of a power failure or operating system crash, transactions that are missing
+#      from the binary log are only in a prepared state. This permits the automatic recovery routine
+#      to roll back the transactions, which guarantees that no transaction is lost from the binary log.
+#
+#    - sync_binlog=N, where N is a value other than 0 or 1: The binary log is synchronized to
+#      disk after N binary log commit groups have been collected. In the event of a power failure or
+#      operating system crash, it is possible that the server has committed transactions that have
+#      not been flushed to the binary log. This setting can have a negative impact on performance
+#      due to the increased number of disk writes. A higher value improves performance,
+#      but with an increased risk of data loss. 
+#
+#    For the greatest possible durability and consistency in a replication setup that uses
+#    InnoDB with transactions, use these settings:
+#    - sync_binlog=1
+#    - innodb_flush_log_at_trx_commit=1
+
+# (default is 1)
+sync_binlog = 0
