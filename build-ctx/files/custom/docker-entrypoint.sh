@@ -187,6 +187,11 @@ if [ -n "$CF_LANG" ]; then
 	update-locale LANG=$CF_LANG || {
 		_sleepBeforeAbort
 	}
+	update-locale LANGUAGE=$CF_LANG
+	update-locale LC_ALL=$CF_LANG
+	echo "export LANG=$CF_LANG" >> ~/.bashrc
+	echo "export LANGUAGE=$CF_LANG" >> ~/.bashrc
+	echo "export LC_ALL=$CF_LANG" >> ~/.bashrc
 fi
 
 if [ -n "$CF_TIMEZONE" ]; then
