@@ -24,10 +24,7 @@ ENV DEBIAN_FRONTEND="noninteractive"
 RUN \
 	apt-get update \
 	&& apt-get upgrade -y \
-	&& apt-get dist-upgrade -y \
-	&& apt-get install -y --no-install-recommends \
-			# general packages
-				procps
+	&& apt-get dist-upgrade -y
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
