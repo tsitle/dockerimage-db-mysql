@@ -14,7 +14,7 @@ CF_SYSUSR_MYSQL_GROUP_ID=${CF_SYSUSR_MYSQL_GROUP_ID:-911}
 # ----------------------------------------------------------
 
 function showUsage() {
-	echo "Usage: $VAR_MYNAME dump|import|ls [<DBHOST> <DBPORT> <DBROOTPASS> <DBSCHEMENAME> <DBUSERNAME> <DBUSERPASS> <FILENAME>]|[<SUBDIR>]" >/dev/stderr
+	echo "Usage: $VAR_MYNAME dump|import|ls [<DBHOST> <DBPORT> <DBROOTPASS> <DBSCHEMANAME> <DBUSERNAME> <DBUSERPASS> <FILENAME>]|[<SUBDIR>]" >/dev/stderr
 	echo "Examples: $VAR_MYNAME ls" >/dev/stderr
 	echo "          $VAR_MYNAME ls SugarCRM-DB-BFB-190215-dev" >/dev/stderr
 	echo "          $VAR_MYNAME import 127.0.0.1 3306 rootpass testdb testuser testpass dbdump.sql" >/dev/stderr
@@ -91,7 +91,7 @@ if [ "$PAR_CMD" = "ls" ]; then
 		ls -l
 	fi
 elif [ "$PAR_CMD" = "dump" ]; then
-	# Dump Database Scheme to SQL file
+	# Dump Database Schema to SQL file
 	if [ -d "$PAR_FN" ] || ! `echo -n "$PAR_FN" | grep -q -e "\.sql$" -e "\.gz$" -e "\.gz\.aa$"`; then
 		# if we were provided with a directory name then turn it into a filename
 		PAR_FN="$(echo -n "$PAR_FN" | sed -e 's/\/$//')"

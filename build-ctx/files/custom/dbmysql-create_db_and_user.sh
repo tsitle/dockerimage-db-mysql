@@ -9,7 +9,7 @@ VAR_MYNAME="$(basename "$0")"
 # ----------------------------------------------------------
 
 function showUsage() {
-	echo "Usage: $VAR_MYNAME <DBHOST> <DBPORT> <DBROOTPASS> <DBSCHEMENAME> <DBUSERNAME> <DBUSERPASS>" >/dev/stderr
+	echo "Usage: $VAR_MYNAME <DBHOST> <DBPORT> <DBROOTPASS> <DBSCHEMANAME> <DBUSERNAME> <DBUSERPASS>" >/dev/stderr
 	echo "Example: $VAR_MYNAME 127.0.0.1 3306 rootpass testdb testuser testpass" >/dev/stderr
 	exit 1
 }

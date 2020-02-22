@@ -48,7 +48,7 @@ Only when the internal data directory doesn't already exist:
 - CF\_ENABLE\_DB\_INIT\_DEBUG [bool]: Enable debugging output when DB is initialized?  
 Warning: This will print DB user passwords to the log output
 - CF\_DB\_ROOT\_PASSWORD [string]: Password for DB root user (>= 4 chars)
-- to create a new DB scheme when a container is started:
+- to create a new DB schema when a container is started:
 	- CF\_DB\_USER\_NAME [string]: Create a DB user with this name
 	- CF\_DB\_USER\_PASS [string]: Password for CF\_DB\_USER\_NAME (>= 4 chars)
-	- CF\_DB\_SCHEME\_NAME [string]: Create a DB scheme that CF\_DB\_USER\_NAME can access
+	- CF\_DB\_SCHEMA\_NAME [string]: Create a DB schema that CF\_DB\_USER\_NAME can access
