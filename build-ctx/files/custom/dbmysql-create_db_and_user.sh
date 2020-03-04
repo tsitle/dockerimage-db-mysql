@@ -9,10 +9,20 @@ VAR_MYNAME="$(basename "$0")"
 # ----------------------------------------------------------
 
 function showUsage() {
-	echo "Usage: $VAR_MYNAME <DBHOST> <DBPORT> <DBROOTPASS> <DBSCHEMANAME> <DBUSERNAME> <DBUSERPASS>" >/dev/stderr
+	echo "Usage: $VAR_MYNAME [--grant-super] <DBHOST> <DBPORT> <DBROOTPASS> <DBSCHEMANAME> <DBUSERNAME> <DBUSERPASS>" >/dev/stderr
 	echo "Example: $VAR_MYNAME 127.0.0.1 3306 rootpass testdb testuser testpass" >/dev/stderr
 	exit 1
 }
+
+if [ $# -eq 0 ] || [ "$1" = "--help" -o "$1" = "-h" ]; then
+	showUsage
+fi
+
+OPT_GRANT_SUPER=false
+if [ "$1" = "--grant-super" ]; then
+	OPT_GRANT_SUPER=true
+	shift
+fi
 
 if [ $# -ne 6 ]; then
 	showUsage
@@ -95,23 +105,25 @@ mysql \
 		--password="$PAR_DBROOTPW" \
 		-e "$TMPCMD" || exit 1
 
-#echo "  Grant SUPER privilege..."
-#TMPCMD=""
-#if [ "$VAR_MYSQL_VER" = "5.x" ]; then
-#	# MySQL 5.5 or MySQL 5.6 or MariaDB 10.1 (^= MySQL 5.7)
-#	TMPCMD="GRANT SUPER ON *.* TO '$PAR_DBU'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;"
-#elif [ "$VAR_MYSQL_VER" = "8.x" ]; then
-#	# MySQL 8.0.x
-#	TMPCMD="GRANT SUPER ON *.* TO '$PAR_DBU'@'%' WITH GRANT OPTION;"
-#else
-#	echo "$VAR_MYNAME: incompatible MySQL/MariaDB version specified. Aborting." >/dev/stderr
-#	exit 1
-#fi
-#mysql \
-#		-h "$PAR_DBHOST" \
-#		--port=$PAR_DBPORT \
-#		-u "root" \
-#		--password="$PAR_DBROOTPW" \
-#		-e "$TMPCMD" || exit 1
+if [ "$OPT_GRANT_SUPER" = "true" ]; then
+	echo "  Grant SUPER privilege..."
+	TMPCMD=""
+	if [ "$VAR_MYSQL_VER" = "5.x" ]; then
+		# MySQL 5.5 or MySQL 5.6 or MariaDB 10.1 (^= MySQL 5.7)
+		TMPCMD="GRANT SUPER ON *.* TO '$PAR_DBU'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;"
+	elif [ "$VAR_MYSQL_VER" = "8.x" ]; then
+		# MySQL 8.0.x
+		TMPCMD="GRANT SUPER ON *.* TO '$PAR_DBU'@'%' WITH GRANT OPTION;"
+	else
+		echo "$VAR_MYNAME: incompatible MySQL/MariaDB version specified. Aborting." >/dev/stderr
+		exit 1
+	fi
+	mysql \
+			-h "$PAR_DBHOST" \
+			--port=$PAR_DBPORT \
+			-u "root" \
+			--password="$PAR_DBROOTPW" \
+			-e "$TMPCMD" || exit 1
+fi
 
 echo "$VAR_MYNAME: Done."

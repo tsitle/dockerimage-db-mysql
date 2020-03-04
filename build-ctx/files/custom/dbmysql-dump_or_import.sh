@@ -23,7 +23,7 @@ function showUsage() {
 	exit 1
 }
 
-if [ $# -lt 1 ]; then
+if [ $# -eq 0 ] || [ "$1" = "--help" -o "$1" = "-h" ]; then
 	showUsage
 fi
 
