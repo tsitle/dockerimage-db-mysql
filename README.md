@@ -39,7 +39,7 @@ See the related GitHub repository [https://github.com/tsitle/dockercontainer-db-
 - CF\_MYSQL\_MAX\_ALLOWED\_PACKET [string]: Size string (e.g. "128M")
 - CF\_MYSQL\_INNODB\_BUFFER\_POOL\_SIZE [string]: Size string (e.g. "8G")
 - CF\_MYSQL\_INNODB\_LOG\_FILE\_SIZE [string]: Size string (e.g. "64M")
-- CF\_MYSQL\_SQLMODE [string]: List of options for sql_mode (e.g. "STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO")
+- CF\_MYSQL\_SQLMODE [string]: List of options for sql_mode (e.g. "STRICT\_TRANS\_TABLES,ERROR\_FOR\_DIVISION\_BY\_ZERO")
 - CF\_LANG [string]: Language to use (en\_EN.UTF-8 or de\_DE.UTF-8)
 - CF\_TIMEZONE [string]: Timezone (e.g. 'Europe/Berlin')
 
