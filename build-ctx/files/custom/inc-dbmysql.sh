@@ -15,6 +15,8 @@
 #   Ver 15.1 Distrib 10.1.37-MariaDB,
 # mariadb101 (debian:stretch):
 #   Ver 15.1 Distrib 10.1.38-MariaDB,
+# mariadb103 (debian:buster):
+#   Ver 15.1 Distrib 10.3.22-MariaDB,
 # mariadb104 (debian:stretch):
 #   Ver 15.1 Distrib 10.4.2-MariaDB,
 #
@@ -27,7 +29,8 @@ function dbmysqlGetDbServerVersion() {
 			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 14\.14 Distrib 5\.5\..*,"` || \
 			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 14\.14 Distrib 5\.6\..*,"` || \
 			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 14\.14 Distrib 5\.7\..*,"` || \
-			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 15\.1 Distrib 10\.1\..*\-MariaDB,"` \
+			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 15\.1 Distrib 10\.1\..*\-MariaDB,"` || \
+			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 15\.1 Distrib 10\.3\..*\-MariaDB,"` \
 			; then
 		# MySQL 5.5 or MySQL 5.6 or MySQL 5.7 or MariaDB 10.1 (^= MySQL 5.7)
 		TMP_MYSQL_VER="5.x"

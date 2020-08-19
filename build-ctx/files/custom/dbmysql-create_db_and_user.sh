@@ -5,6 +5,8 @@
 #
 
 VAR_MYNAME="$(basename "$0")"
+VAR_MYDIR="$(realpath "$0")"
+VAR_MYDIR="$(dirname "$VAR_MYDIR")"
 
 # ----------------------------------------------------------
 
@@ -47,7 +49,7 @@ fi
 
 # ----------------------------------------------------------
 
-. /root/inc-dbmysql.sh || exit 1
+. "$VAR_MYDIR"/inc-dbmysql.sh || exit 1
 
 VAR_MYSQL_VER="$(dbmysqlGetDbServerVersion)"
 

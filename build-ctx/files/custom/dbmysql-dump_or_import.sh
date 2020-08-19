@@ -5,6 +5,8 @@
 #
 
 VAR_MYNAME="$(basename "$0")"
+VAR_MYDIR="$(realpath "$0")"
+VAR_MYDIR="$(dirname "$VAR_MYDIR")"
 
 # ----------------------------------------------------------
 
@@ -64,9 +66,9 @@ fi
 
 # ----------------------------------------------------------
 
-cd /root || exit 1
+cd "$VAR_MYDIR" || exit 1
 
-. /root/inc-dbmysql.sh || exit 1
+. inc-dbmysql.sh || exit 1
 
 VAR_MYSQL_VER="$(dbmysqlGetDbServerVersion)"
 
@@ -107,7 +109,7 @@ elif [ "$PAR_CMD" = "dump" ]; then
 	#	PAR_FN="${PAR_FN}.sql"
 	#}
 
-	cd "/root/$VAR_EXTDBFILES_DIR" || exit 1
+	cd "$VAR_MYDIR/$VAR_EXTDBFILES_DIR" || exit 1
 
 	if `echo -n "$PAR_FN" | grep -q "/"`; then
 		TMP_DIRN="$(dirname "$PAR_FN")"
@@ -120,7 +122,7 @@ elif [ "$PAR_CMD" = "dump" ]; then
 				TMP_DIRN="$(dirname "$TMP_DIRN")"
 				[ "$TMP_DIRN" = "." -o "$TMP_DIRN" = "./" -o -z "$TMP_DIRN" ] && break
 
-				chown $CF_SYSUSR_MYSQL_USER_ID:$CF_SYSUSR_MYSQL_GROUP_ID "/root/$VAR_EXTDBFILES_DIR/$TMP_DIRN"
+				chown $CF_SYSUSR_MYSQL_USER_ID:$CF_SYSUSR_MYSQL_GROUP_ID "$VAR_MYDIR/$VAR_EXTDBFILES_DIR/$TMP_DIRN"
 			done
 		fi
 	fi
@@ -145,7 +147,7 @@ elif [ "$PAR_CMD" = "dump" ]; then
 	chown $CF_SYSUSR_MYSQL_USER_ID:$CF_SYSUSR_MYSQL_GROUP_ID "${PAR_FN}.gz"*
 else
 	# Import SQL file
-	cd "/root/$VAR_EXTDBFILES_DIR" || exit 1
+	cd "$VAR_MYDIR/$VAR_EXTDBFILES_DIR" || exit 1
 
 	if [ -d "$PAR_FN" ]; then
 		# if we were provided with a directory name then turn it into a filename
@@ -158,7 +160,7 @@ else
 	fi
 
 	#
-	/root/dbmysql-create_db_and_user.sh \
+	"$VAR_MYDIR"/dbmysql-create_db_and_user.sh \
 			"$PAR_DBHOST" \
 			$PAR_DBPORT \
 			"$PAR_DBROOTPW" \
@@ -166,7 +168,7 @@ else
 			"$PAR_DBU" \
 			"$PAR_DBP" || exit 1
 
-	cd "/root/$VAR_EXTDBFILES_DIR" || exit 1
+	cd "$VAR_MYDIR/$VAR_EXTDBFILES_DIR" || exit 1
 
 	#
 	echo "$VAR_MYNAME: Importing DB..."
