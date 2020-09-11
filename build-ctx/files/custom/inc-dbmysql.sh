@@ -32,7 +32,7 @@ function dbmysqlGetDbServerVersion() {
 			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 15\.1 Distrib 10\.1\..*\-MariaDB,"` || \
 			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 15\.1 Distrib 10\.3\..*\-MariaDB,"` \
 			; then
-		# MySQL 5.5 or MySQL 5.6 or MySQL 5.7 or MariaDB 10.1 (^= MySQL 5.7)
+		# MySQL 5.5 or MySQL 5.6 or MySQL 5.7 or MariaDB 10.1 or MariaDB 10.3
 		TMP_MYSQL_VER="5.x"
 	elif \
 			`echo "$TMP_MYSQL_VERSTR" | grep -q -e " Ver 8\.0\..* for "` || \

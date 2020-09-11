@@ -161,6 +161,7 @@ else
 
 	#
 	"$VAR_MYDIR"/dbmysql-create_db_and_user.sh \
+			--grant-super \
 			"$PAR_DBHOST" \
 			$PAR_DBPORT \
 			"$PAR_DBROOTPW" \
