@@ -139,3 +139,13 @@ innodb_flush_log_at_trx_commit = 0
 
 # (default is 1)
 sync_binlog = 0
+
+####
+
+#innodb_page_size	= 16k
+### table_open_cache = ( amount of tables * maximum parallel threads ) / 2
+#table_open_cache	= 1200
+### table_definition_cache = 400 + (table_open_cache / 2)
+#table_definition_cache	= 1000
+### open_files_limit = table_open_cache * 2 = 360000
+#open_files_limit	= 2400

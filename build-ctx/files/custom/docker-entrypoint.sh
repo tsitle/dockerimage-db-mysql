@@ -16,11 +16,37 @@ echo "$HOST_IP dockerhost" >> /etc/hosts
 CF_SYSUSR_MYSQL_USER_ID=${CF_SYSUSR_MYSQL_USER_ID:-911}
 CF_SYSUSR_MYSQL_GROUP_ID=${CF_SYSUSR_MYSQL_GROUP_ID:-911}
 
+CF_MYSQL_MAX_ALLOWED_PACKET="${CF_MYSQL_MAX_ALLOWED_PACKET:-}"
+CF_MYSQL_INNODB_BUFFER_POOL_SIZE="${CF_MYSQL_INNODB_BUFFER_POOL_SIZE:-}"
+CF_MYSQL_INNODB_LOG_FILE_SIZE="${CF_MYSQL_INNODB_LOG_FILE_SIZE:-}"
+CF_MYSQL_INNODB_PAGE_SIZE="${CF_MYSQL_INNODB_PAGE_SIZE:-}"
+CF_MYSQL_TABLE_OPEN_CACHE="${CF_MYSQL_TABLE_OPEN_CACHE:-}"
+CF_MYSQL_TABLE_DEF_CACHE="${CF_MYSQL_TABLE_DEF_CACHE:-}"
+CF_MYSQL_OPEN_FILES_LIMIT="${CF_MYSQL_OPEN_FILES_LIMIT:-}"
+CF_MYSQL_SQLMODE="${CF_MYSQL_SQLMODE:-}"
+
+CF_LANG="${CF_LANG:-}"
+CF_TIMEZONE="${CF_TIMEZONE:-}"
+
 # mainly for /etc/cont-init.d/40-initialise-db:
 export MYSQL_ROOT_PASSWORD=$CF_DB_ROOT_PASSWORD
 export MYSQL_USER=$CF_DB_USER_NAME
 export MYSQL_PASSWORD=$CF_DB_USER_PASS
 export MYSQL_DATABASE=$CF_DB_SCHEMA_NAME
+
+. /root/inc-dbmysql.sh || exit 1
+
+LVAR_IS_MARIADB=false
+dbmysqlGetIsDbServerMariaDb && LVAR_IS_MARIADB=true
+
+LVAR_SYSUSR_MYSQL_USER_NAME="mysql"
+
+if [ "$LVAR_IS_MARIADB" = "true" ]; then
+	LVAR_SYSUSR_MYSQL_USER_NAME="abc"
+	# mainly for /etc/cont-init.d/10-adduser:
+	export PUID=$CF_SYSUSR_MYSQL_USER_ID
+	export PGID=$CF_SYSUSR_MYSQL_GROUP_ID
+fi
 
 # ----------------------------------------------------------
 
@@ -142,44 +168,111 @@ function _dep_setOwnerAndPerms_recursive() {
 #   files/lsio-baseimage_ubuntu_bionic/fs_root/etc/cont-init.d/10-adduser
 # but we need the User/Group ID to be changed here for chown+chmod
 
-_createUserGroup "mysql" "${CF_SYSUSR_MYSQL_USER_ID}" "${CF_SYSUSR_MYSQL_GROUP_ID}" || {
+_createUserGroup "$LVAR_SYSUSR_MYSQL_USER_NAME" "${CF_SYSUSR_MYSQL_USER_ID}" "${CF_SYSUSR_MYSQL_GROUP_ID}" || {
 	_sleepBeforeAbort
 }
 
 _dep_setOwnerAndPerms_recursive "/var/lib/mysql" $CF_SYSUSR_MYSQL_USER_ID $CF_SYSUSR_MYSQL_GROUP_ID "750" "640"
-_dep_setOwnerAndPerms_recursive "/var/lib/mysql-files" $CF_SYSUSR_MYSQL_USER_ID $CF_SYSUSR_MYSQL_GROUP_ID "750" "640"
-_dep_setOwnerAndPerms_recursive "/var/lib/mysql-keyring" $CF_SYSUSR_MYSQL_USER_ID $CF_SYSUSR_MYSQL_GROUP_ID "750" "640"
+if [ "$LVAR_IS_MARIADB" != "true" ]; then
+	_dep_setOwnerAndPerms_recursive "/var/lib/mysql-files" $CF_SYSUSR_MYSQL_USER_ID $CF_SYSUSR_MYSQL_GROUP_ID "750" "640"
+	_dep_setOwnerAndPerms_recursive "/var/lib/mysql-keyring" $CF_SYSUSR_MYSQL_USER_ID $CF_SYSUSR_MYSQL_GROUP_ID "750" "640"
+fi
 _dep_setOwnerAndPerms_recursive "/root/extDbFiles" $CF_SYSUSR_MYSQL_USER_ID $CF_SYSUSR_MYSQL_GROUP_ID "750" "640"
 
 # ----------------------------------------------------------------------
 
+LVAR_MY_CNF_FN="xxx"
+[ "$LVAR_IS_MARIADB" = "true" ] && LVAR_MY_CNF_FN="/defaults/my.cnf"
+
 if [ -n "$CF_MYSQL_MAX_ALLOWED_PACKET" ]; then
 	echo "$VAR_MYNAME: Setting MYSQL_MAX_ALLOWED_PACKET=$CF_MYSQL_MAX_ALLOWED_PACKET"
-	echo "max_allowed_packet = $CF_MYSQL_MAX_ALLOWED_PACKET" >> /etc/mysql/conf.d/docker.cnf
-	sed \
-			-e "s/^max_allowed_packet\t= .*$/max_allowed_packet   = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
-			-i'' /etc/mysql/conf.d/mysqldump.cnf
-	sed \
-			-e "s/^max_allowed_packet\t= .*$/max_allowed_packet   = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
-			-i'' /etc/mysql/mysql.conf.d/mysqld.cnf
+	if [ "$LVAR_IS_MARIADB" = "true" ]; then
+		sed \
+				-e "s/^max_allowed_packet\t= .*$/max_allowed_packet = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
+				-i'' $LVAR_MY_CNF_FN
+	else
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/docker.cnf"
+		echo "max_allowed_packet = $CF_MYSQL_MAX_ALLOWED_PACKET" >> $LVAR_MY_CNF_FN
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/mysqldump.cnf"
+		sed \
+				-e "s/^max_allowed_packet\t= .*$/max_allowed_packet   = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
+				-i'' $LVAR_MY_CNF_FN
+		LVAR_MY_CNF_FN="/etc/mysql/mysql.conf.d/mysqld.cnf"
+		sed \
+				-e "s/^max_allowed_packet\t= .*$/max_allowed_packet   = $CF_MYSQL_MAX_ALLOWED_PACKET/g" \
+				-i'' $LVAR_MY_CNF_FN
+	fi
 fi
 if [ -n "$CF_MYSQL_INNODB_BUFFER_POOL_SIZE" ]; then
 	echo "$VAR_MYNAME: Setting MYSQL_INNODB_BUFFER_POOL_SIZE=$CF_MYSQL_INNODB_BUFFER_POOL_SIZE"
-	sed \
-			-e "s/^innodb_buffer_pool_size = .*$/innodb_buffer_pool_size = $CF_MYSQL_INNODB_BUFFER_POOL_SIZE/g" \
-			-i'' /etc/mysql/conf.d/custom-innodb.cnf
+	if [ "$LVAR_IS_MARIADB" = "true" ]; then
+		sed \
+				-e "s/^innodb_buffer_pool_size\t= .*$/innodb_buffer_pool_size = $CF_MYSQL_INNODB_BUFFER_POOL_SIZE/g" \
+				-i'' $LVAR_MY_CNF_FN
+	else
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/custom-innodb.cnf"
+		sed \
+				-e "s/^innodb_buffer_pool_size = .*$/innodb_buffer_pool_size = $CF_MYSQL_INNODB_BUFFER_POOL_SIZE/g" \
+				-i'' $LVAR_MY_CNF_FN
+	fi
 fi
 if [ -n "$CF_MYSQL_INNODB_LOG_FILE_SIZE" ]; then
 	echo "$VAR_MYNAME: Setting MYSQL_INNODB_LOG_FILE_SIZE=$CF_MYSQL_INNODB_LOG_FILE_SIZE"
-	sed \
-			-e "s/^innodb_log_file_size = .*$/innodb_log_file_size = $CF_MYSQL_INNODB_LOG_FILE_SIZE/g" \
-			-i'' /etc/mysql/conf.d/custom-innodb.cnf
+	if [ "$LVAR_IS_MARIADB" = "true" ]; then
+		sed \
+				-e "s/^#innodb_log_file_size\t= .*$/innodb_log_file_size = $CF_MYSQL_INNODB_LOG_FILE_SIZE/g" \
+				-i'' $LVAR_MY_CNF_FN
+	else
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/custom-innodb.cnf"
+		sed \
+				-e "s/^innodb_log_file_size = .*$/innodb_log_file_size = $CF_MYSQL_INNODB_LOG_FILE_SIZE/g" \
+				-i'' $LVAR_MY_CNF_FN
+	fi
 	rm /var/lib/mysql/ib_log* 2>/dev/null
+fi
+if [ -n "$CF_MYSQL_INNODB_PAGE_SIZE" ]; then
+	echo "$VAR_MYNAME: Setting MYSQL_INNODB_PAGE_SIZE=$CF_MYSQL_INNODB_PAGE_SIZE"
+	if [ "$LVAR_IS_MARIADB" != "true" ]; then
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/custom-innodb.cnf"
+	fi
+	sed \
+			-e "s/^#innodb_page_size\t= .*$/innodb_page_size = $CF_MYSQL_INNODB_PAGE_SIZE/g" \
+			-i'' $LVAR_MY_CNF_FN
+fi
+if [ -n "$CF_MYSQL_TABLE_OPEN_CACHE" ]; then
+	echo "$VAR_MYNAME: Setting MYSQL_TABLE_OPEN_CACHE=$CF_MYSQL_TABLE_OPEN_CACHE"
+	if [ "$LVAR_IS_MARIADB" != "true" ]; then
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/custom-innodb.cnf"
+	fi
+	sed \
+			-e "s/^#table_open_cache\t= .*$/table_open_cache = $CF_MYSQL_TABLE_OPEN_CACHE/g" \
+			-i'' $LVAR_MY_CNF_FN
+fi
+if [ -n "$CF_MYSQL_TABLE_DEF_CACHE" ]; then
+	echo "$VAR_MYNAME: Setting MYSQL_TABLE_DEF_CACHE=$CF_MYSQL_TABLE_DEF_CACHE"
+	if [ "$LVAR_IS_MARIADB" != "true" ]; then
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/custom-innodb.cnf"
+	fi
+	sed \
+			-e "s/^#table_definition_cache\t= .*$/table_definition_cache = $CF_MYSQL_TABLE_DEF_CACHE/g" \
+			-i'' $LVAR_MY_CNF_FN
+fi
+if [ -n "$CF_MYSQL_OPEN_FILES_LIMIT" ]; then
+	echo "$VAR_MYNAME: Setting MYSQL_OPEN_FILES_LIMIT=$CF_MYSQL_OPEN_FILES_LIMIT"
+	if [ "$LVAR_IS_MARIADB" != "true" ]; then
+		LVAR_MY_CNF_FN="/etc/mysql/conf.d/custom-innodb.cnf"
+	fi
+	sed \
+			-e "s/^#open_files_limit\t= .*$/open_files_limit = $CF_MYSQL_OPEN_FILES_LIMIT/g" \
+			-i'' $LVAR_MY_CNF_FN
 fi
 if [ -n "$CF_MYSQL_SQLMODE" ]; then
 	echo "$VAR_MYNAME: Setting MYSQL_SQLMODE=$CF_MYSQL_SQLMODE"
-	echo "[mysqld]" >> /etc/mysql/mysql.conf.d/mysqld.cnf
-	echo "sql_mode = $CF_MYSQL_SQLMODE" >> /etc/mysql/mysql.conf.d/mysqld.cnf
+	if [ "$LVAR_IS_MARIADB" != "true" ]; then
+		LVAR_MY_CNF_FN="/etc/mysql/mysql.conf.d/mysqld.cnf"
+	fi
+	echo "[mysqld]" >> $LVAR_MY_CNF_FN
+	echo "sql_mode = $CF_MYSQL_SQLMODE" >> $LVAR_MY_CNF_FN
 fi
 
 # ----------------------------------------------------------------------
@@ -212,4 +305,11 @@ fi
 
 # ----------------------------------------------------------------------
 
-/usr/local/bin/docker-entrypoint-vendor.sh "$@"
+if [ "$LVAR_IS_MARIADB" != "true" ]; then
+	# MySQL
+	/usr/local/bin/docker-entrypoint-vendor.sh "$@"
+	exit $?
+fi
+
+# MariaDB
+/init "$@"
